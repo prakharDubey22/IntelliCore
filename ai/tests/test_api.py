@@ -1,5 +1,5 @@
-from services.skill_gap import analyze_skill_gap
+from services.roadmap_generator import generate_roadmap
 
-result = analyze_skill_gap("uploads/resume.pdf")
+result = generate_roadmap("uploads/resume.pdf")
 
 print(result)
