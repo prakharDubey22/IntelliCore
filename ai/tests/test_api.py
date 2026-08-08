@@ -1,5 +1,9 @@
-from services.roadmap_generator import generate_roadmap
+from services.career_chat import get_career_guidance
 
-result = generate_roadmap("uploads/resume.pdf")
+
+result = get_career_guidance(
+    "uploads/resume.pdf",
+    "What should I focus on during the next 3 months to become placement ready?"
+)
 
 print(result)
