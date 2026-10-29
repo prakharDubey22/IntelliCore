@@ -46,6 +46,13 @@ ROLE_ALIASES = {
     "Full Stack Developer": "Software Developer",
 }
 
+BRANCH_ALIASES = {
+    "Computer Science": "CSE",
+    "Computer Science Engineering": "CSE",
+    "Artificial Intelligence": "CS-AI",
+    "AI": "CS-AI",
+}
+
 
 class StudentFeatures(BaseModel):
     cgpa: float
@@ -79,6 +86,7 @@ def predict(student: StudentFeatures):
     data = student.model_dump()
     mapped = {}
     data["preferred_role"] = ROLE_ALIASES.get(data["preferred_role"], data["preferred_role"])
+    data["branch"] = BRANCH_ALIASES.get(data["branch"], data["branch"])
     for col, fallback in FALLBACKS.items():
         allowed = KNOWN.get(col)
         if allowed and data[col] not in allowed:
