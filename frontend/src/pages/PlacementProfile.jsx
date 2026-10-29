@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-import Navbar from '../components/Navbar'
+import Navbar from '../components/navbar'
 import MlPredictionCard from '../components/MlPredictionCard'
 import '../placement-ml.css'
 

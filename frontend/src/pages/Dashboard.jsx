@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import Navbar from '../components/Navbar'
+import Navbar from '../components/navbar'
 import ScoreCard from '../components/ScoreCard'
 import ResumeCard from '../components/ResumeCard'
 import SkillGap from '../components/SkillGap'
