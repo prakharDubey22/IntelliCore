@@ -26,7 +26,7 @@ function SkillGap() {
 
     try {
       const response = await axios.post(
-        'http://localhost:5001/api/skill-gap',
+        `${import.meta.env.VITE_API_URL}/api/skill-gap`,
         { targetRole: targetRole.trim() },
         {
           headers: {

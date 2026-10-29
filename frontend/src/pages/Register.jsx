@@ -58,7 +58,7 @@ async function handleSubmit(event) {
     setIsCreating(true)
 
     const response = await axios.post(
-      'http://localhost:5001/api/auth/register',
+      `${import.meta.env.VITE_API_URL}/api/auth/register`,
       {
         name: formData.fullName.trim(),
         email: formData.email.trim(),
