@@ -15,13 +15,13 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 
 model_path = hf_hub_download(
     repo_id=MODEL_REPO,
-    filename="random_forest_model.pkl",
+    filename="random_forest_model_small.pkl",
     token=HF_TOKEN,
 )
 
 preprocessor_path = hf_hub_download(
     repo_id=MODEL_REPO,
-    filename="preprocessor.pkl",
+    filename="preprocessor_small.pkl",
     token=HF_TOKEN,
 )
 
