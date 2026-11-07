@@ -10,7 +10,7 @@ const {
   getInterviewStats,
 } = require("../services/readinessService");
 
-const ML_SERVICE_URL = process.env.ML_SERVICE_URL || "http://localhost:8000";
+const ML_SERVICE_URL =  "http://localhost:5001";
 
 // Used only when the student has no data for these yet.
 // They are reported back as "assumedInputs" so the page can say so.
