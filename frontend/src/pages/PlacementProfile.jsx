@@ -120,6 +120,8 @@ function PlacementProfile() {
     setSaving(true)
 
     try {
+      console.log('Placement profile request body:', body)
+
       const response = await fetch(`${API_URL}/api/placement-profile`, {
         method: 'PUT',
         headers: {
