@@ -15,13 +15,13 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 
 model_path = hf_hub_download(
     repo_id=MODEL_REPO,
-    filename="random_forest_model.pkl",
+    filename="random_forest_model_small.pkl",
     token=HF_TOKEN,
 )
 
 preprocessor_path = hf_hub_download(
     repo_id=MODEL_REPO,
-    filename="preprocessor.pkl",
+    filename="preprocessor_small.pkl",
     token=HF_TOKEN,
 )
 
@@ -44,6 +44,13 @@ ROLE_ALIASES = {
     "Backend Developer": "Software Developer",
     "Frontend Developer": "Software Developer",
     "Full Stack Developer": "Software Developer",
+}
+
+BRANCH_ALIASES = {
+    "Computer Science": "CSE",
+    "Computer Science Engineering": "CSE",
+    "Artificial Intelligence": "CS-AI",
+    "AI": "CS-AI",
 }
 
 
@@ -79,6 +86,7 @@ def predict(student: StudentFeatures):
     data = student.model_dump()
     mapped = {}
     data["preferred_role"] = ROLE_ALIASES.get(data["preferred_role"], data["preferred_role"])
+    data["branch"] = BRANCH_ALIASES.get(data["branch"], data["branch"])
     for col, fallback in FALLBACKS.items():
         allowed = KNOWN.get(col)
         if allowed and data[col] not in allowed:

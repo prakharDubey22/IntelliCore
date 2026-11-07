@@ -23,7 +23,7 @@ function Login() {
     setIsLoggingIn(true)
 
     axios
-      .post('http://localhost:5001/api/auth/login', {
+      .post(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
         email,
         password,
       })

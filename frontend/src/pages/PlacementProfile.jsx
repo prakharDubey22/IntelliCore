@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-import Navbar from '../components/Navbar'
+import Navbar from '../components/navbar'
 import MlPredictionCard from '../components/MlPredictionCard'
 import '../placement-ml.css'
 
@@ -120,6 +120,8 @@ function PlacementProfile() {
     setSaving(true)
 
     try {
+      console.log('Placement profile request body:', body)
+
       const response = await fetch(`${API_URL}/api/placement-profile`, {
         method: 'PUT',
         headers: {

@@ -37,7 +37,7 @@ async function handleAnalyze() {
     formData.append('resume', resume)
 
     const response = await axios.post(
-      'http://localhost:5001/api/ai/analyze-upload',
+      `${import.meta.env.VITE_API_URL}/api/ai/analyze-upload`,
       formData,
       {
         headers: {
