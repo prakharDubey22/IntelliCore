@@ -98,6 +98,8 @@ const getMlPrediction = async (req, res, next) => {
     };
 
     let response;
+    console.log("Calling ML Service:", `${ML_SERVICE_URL}/predict`);
+
 
     try {
       response = await fetch(`${ML_SERVICE_URL}/predict`, {
