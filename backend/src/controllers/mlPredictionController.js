@@ -117,13 +117,15 @@ const getMlPrediction = async (req, res, next) => {
 
     const data = await response.json().catch(() => ({}));
 
-    if (!response.ok) {
-      console.error("ML SERVICE ERROR:", response.status, JSON.stringify(data));
+if (!response.ok) {
+  console.error("ML SERVICE ERROR:", response.status, data);
 
-      return res.status(502).json({
-        message: "The prediction service returned an error",
-      });
-    }
+  return res.status(502).json({
+    message: "The prediction service returned an error",
+    mlStatus: response.status,
+    mlError: data,
+  });
+}
 
     res.status(200).json({
       message: "Prediction generated successfully",
