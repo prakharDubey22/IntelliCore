@@ -1,9 +1,11 @@
+
 const PlacementProfile = require("../models/PlacementProfile");
 const Resume = require("../models/Resume");
 const ResumeAnalysis = require("../models/ResumeAnalysis");
 const SkillGap = require("../models/skillGap");
 const Roadmap = require("../models/Roadmap");
 const Interview = require("../models/interview");
+
 const {
   getAtsScore,
   getResumeQuality,
@@ -13,10 +15,53 @@ const {
 const ML_SERVICE_URL =
   process.env.ML_SERVICE_URL || "http://localhost:8000";
 
-// Used only when the student has no data for these yet.
-// They are reported back as "assumedInputs" so the page can say so.
 const DEFAULT_RESUME_SCORE = 60;
 const DEFAULT_MOCK_INTERVIEW_SCORE = 60;
+
+// Calls the ML service with limited retries for temporary errors.
+const callMlService = async (features) => {
+  const maxAttempts = 3;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(`${ML_SERVICE_URL}/predict`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(features),
+        signal: AbortSignal.timeout(20000),
+      });
+
+      // Retry temporary rate-limit and service-unavailable errors.
+      if (
+        (response.status === 429 || response.status === 503) &&
+        attempt < maxAttempts
+      ) {
+        const delay = attempt * 5000;
+
+        console.log(
+          `ML service returned ${response.status}. Retrying in ${delay}ms...`
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+
+      return response;
+    } catch (error) {
+      if (attempt === maxAttempts) {
+        throw error;
+      }
+
+      const delay = attempt * 5000;
+
+      console.log(
+        `ML request failed. Retrying in ${delay}ms...`
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+};
 
 const getMlPrediction = async (req, res, next) => {
   try {
@@ -42,7 +87,7 @@ const getMlPrediction = async (req, res, next) => {
 
     const assumedInputs = [];
 
-    // Resume score: prefer the ATS score, then the resume completeness score
+    // Resume score: prefer ATS score, then resume completeness score.
     let resumeScore = getAtsScore(resumeAnalysis);
 
     if (resumeScore === null) {
@@ -51,6 +96,7 @@ const getMlPrediction = async (req, res, next) => {
 
     if (resumeScore === null) {
       resumeScore = DEFAULT_RESUME_SCORE;
+
       assumedInputs.push({
         key: "resume_score",
         label: "Resume score",
@@ -58,11 +104,12 @@ const getMlPrediction = async (req, res, next) => {
       });
     }
 
-    // Mock interview score: average of the AI interview scores (0-100)
+    // Average score of AI mock interviews.
     let mockInterviewScore = getInterviewStats(interviews).average;
 
     if (mockInterviewScore === null) {
       mockInterviewScore = DEFAULT_MOCK_INTERVIEW_SCORE;
+
       assumedInputs.push({
         key: "mock_interview_score",
         label: "Mock interview score",
@@ -70,7 +117,8 @@ const getMlPrediction = async (req, res, next) => {
       });
     }
 
-    const education = (resume && resume.education && resume.education[0]) || {};
+    const education =
+      (resume && resume.education && resume.education[0]) || {};
 
     const features = {
       cgpa: profile.cgpa,
@@ -84,9 +132,12 @@ const getMlPrediction = async (req, res, next) => {
       english_score: profile.englishScore,
       projects_count: resume ? (resume.projects || []).length : 0,
       internships_count: resume ? (resume.experience || []).length : 0,
-      certifications_count: resume ? (resume.certifications || []).length : 0,
+      certifications_count: resume
+        ? (resume.certifications || []).length
+        : 0,
       coding_hours_per_week: profile.codingHoursPerWeek,
-      interview_practice_hours_per_week: profile.interviewPracticeHoursPerWeek,
+      interview_practice_hours_per_week:
+        profile.interviewPracticeHoursPerWeek,
       resume_score: resumeScore,
       mock_interview_score: mockInterviewScore,
       degree: profile.degree || education.degree || "BTech",
@@ -97,50 +148,50 @@ const getMlPrediction = async (req, res, next) => {
         "Software Developer",
     };
 
-    let response;
     console.log("Calling ML Service:", `${ML_SERVICE_URL}/predict`);
 
+    let response;
 
     try {
-      response = await fetch(`${ML_SERVICE_URL}/predict`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(features),
-        signal: AbortSignal.timeout(20000),
-      });
+      // Use the retry helper instead of calling fetch directly.
+      response = await callMlService(features);
     } catch (error) {
       console.error("ML SERVICE UNREACHABLE:", error.message);
 
       return res.status(503).json({
         message:
-          "The prediction service is not available right now. Please try again later.",
+          "The prediction service is temporarily unavailable. Please try again later.",
       });
     }
 
-   const responseText = await response.text();
+    const responseText = await response.text();
 
-console.log("ML RESPONSE STATUS:", response.status);
-console.log("ML RESPONSE HEADERS:", Object.fromEntries(response.headers.entries()));
-console.log("ML RESPONSE BODY:", responseText);
+    console.log("ML RESPONSE STATUS:", response.status);
+    console.log(
+      "ML RESPONSE HEADERS:",
+      Object.fromEntries(response.headers.entries())
+    );
+    console.log("ML RESPONSE BODY:", responseText);
 
-let data = {};
+    let data = {};
 
-try {
-  data = responseText ? JSON.parse(responseText) : {};
-} catch {
-  data = { rawResponse: responseText };
-}
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch {
+      data = { rawResponse: responseText };
+    }
 
-if (!response.ok) {
-  console.error("ML SERVICE ERROR:", response.status, data);
-  return res.status(502).json({
-    message: "The prediction service returned an error",
-    mlStatus: response.status,
-    mlError: data,
-  });
-}
+    if (!response.ok) {
+      console.error("ML SERVICE ERROR:", response.status, data);
 
-    res.status(200).json({
+      return res.status(502).json({
+        message: "The prediction service returned an error",
+        mlStatus: response.status,
+        mlError: data,
+      });
+    }
+
+    return res.status(200).json({
       message: "Prediction generated successfully",
       profileComplete: true,
       prediction: {
@@ -154,7 +205,6 @@ if (!response.ok) {
     });
   } catch (error) {
     console.error("ML PREDICTION ERROR:", error.message);
-
     next(error);
   }
 };
