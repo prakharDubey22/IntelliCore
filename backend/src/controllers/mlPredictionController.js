@@ -31,7 +31,18 @@ const callMlService = async (features) => {
         signal: AbortSignal.timeout(20000),
       });
 
-      // Retry temporary rate-limit and service-unavailable errors.
+      // Detect Render Free-plan hibernation rate limiting.
+      const renderLimit = response.headers.get("x-render-routing");
+
+      if (renderLimit === "hibernate-rate-limited") {
+        console.error(
+          "Render Free service rate limit reached. Stopping retries."
+        );
+
+        return response;
+      }
+
+      // Retry other temporary rate-limit and unavailable errors.
       if (
         (response.status === 429 || response.status === 503) &&
         attempt < maxAttempts
@@ -153,7 +164,6 @@ const getMlPrediction = async (req, res, next) => {
     let response;
 
     try {
-      // Use the retry helper instead of calling fetch directly.
       response = await callMlService(features);
     } catch (error) {
       console.error("ML SERVICE UNREACHABLE:", error.message);
